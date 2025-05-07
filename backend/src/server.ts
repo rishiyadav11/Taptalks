@@ -35,13 +35,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
 // Serve frontend in production
+// Serve frontend in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-  app.get("*", (req: Request, res: Response) => {
+  app.get("/*", (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
+
 
 app.get('/seed', async (req, res) => {
   try {
