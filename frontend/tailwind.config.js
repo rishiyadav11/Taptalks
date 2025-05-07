@@ -1,4 +1,3 @@
-// tailwind.config.js (ESM format required in v4)
 import daisyui from "daisyui";
 
 /** @type {import('tailwindcss').Config} */

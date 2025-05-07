@@ -11,7 +11,7 @@ interface AuthenticatedRequest extends Request {
     fullName: string;
     email: string;
     profilePic?: string;
-  };
+  };  
 }
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
