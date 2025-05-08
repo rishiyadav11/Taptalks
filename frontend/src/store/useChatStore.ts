@@ -6,9 +6,18 @@ import { useAuthStore } from "./useAuthStore";
 // Define User and Message types
 type User = {
   _id: string;
-  name: string;
+  fullName: string;
   email: string;
-  avatar?: string;
+  profilePic?: string;
+  lastMessage?: {
+    text: string;
+    createdAt: string;
+    senderId: {
+      _id: string;
+      fullName: string;
+    };
+  };
+  createdAt: string;
 };
 
 type Message = {
@@ -17,6 +26,9 @@ type Message = {
   text: string;
   createdAt: string;
   updatedAt: string;
+  image?: string;
+  reactions?: { emoji: string; user: string }[];
+  status: "sent" | "delivered" | "read";
 };
 
 interface ChatStore {
@@ -32,6 +44,7 @@ interface ChatStore {
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
   setSelectedUser: (selectedUser: User | null) => void;
+  markMessageAsRead: (messageId: string) => Promise<void>;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -45,7 +58,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data as User[] }); // Type casting to User[]
+      set({ users: res.data as User[] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An error occurred");
     } finally {
@@ -57,7 +70,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data as Message[] }); // Type casting to Message[]
+      set({ messages: res.data as Message[] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An error occurred");
     } finally {
@@ -70,8 +83,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!selectedUser) return;
 
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: [...messages, res.data as Message] }); // Type casting to Message
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        messageData
+      );
+      const responseData = res.data as Omit<Message, "status">;
+      const newMessage: Message = {
+        ...responseData,
+        status: "sent",
+      };
+      set({ messages: [...messages, newMessage] });
+
+      // Emit socket event for message delivery
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("message_delivered", { messageId: newMessage._id });
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "An error occurred");
     }
@@ -88,23 +115,50 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       return;
     }
 
-    socket.on("newMessage", (newMessage: Message) => { // Type casting to Message
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+    socket.on("newMessage", (newMessage: Message) => {
+      const isMessageSentFromSelectedUser =
+        newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
       set({
         messages: [...get().messages, newMessage],
       });
+
+      // Emit message delivered event
+      socket.emit("message_delivered", { messageId: newMessage._id });
+    });
+
+    // Listen for message status updates
+    socket.on("message_status_update", ({ messageId, status }) => {
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg._id === messageId ? { ...msg, status } : msg
+        ),
+      }));
     });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-
     if (!socket) return;
 
     socket.off("newMessage");
+    socket.off("message_status_update");
   },
 
-  setSelectedUser: (selectedUser: User | null) => set({ selectedUser }), // Handle selectedUser as null or User
+  setSelectedUser: (selectedUser: User | null) => set({ selectedUser }),
+
+  markMessageAsRead: async (messageId: string) => {
+    try {
+      await axiosInstance.post(`/messages/${messageId}/read`);
+      const socket = useAuthStore.getState().socket;
+      if (socket) {
+        socket.emit("message_read", { messageId });
+      }
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to mark message as read"
+      );
+    }
+  },
 }));

@@ -11,7 +11,7 @@ interface AuthenticatedRequest extends Request {
     fullName: string;
     email: string;
     profilePic?: string;
-  };  
+  };
 }
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
@@ -128,6 +128,41 @@ export const checkAuth = (req: AuthenticatedRequest, res: Response): void => {
     res.status(200).json(req.user);
   } catch (error: any) {
     console.error("Error in checkAuth controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const searchUsers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { q } = req.query;
+
+    if (!q || typeof q !== "string") {
+      res.status(400).json({ message: "Search query is required" });
+      return;
+    }
+
+    const searchQuery = q.trim();
+    if (searchQuery.length < 1) {
+      res
+        .status(400)
+        .json({ message: "Search query must be at least 1 character" });
+      return;
+    }
+
+    // Search users by name or email, case insensitive
+    const users = await User.find({
+      $or: [
+        { fullName: { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+      ],
+    }).select("-password"); // Exclude password from results
+
+    res.status(200).json(users);
+  } catch (error: any) {
+    console.error("Error in searchUsers controller:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
