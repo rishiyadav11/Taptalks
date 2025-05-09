@@ -59,7 +59,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-950 bg-[url('https://www.jsmastery.pro/assets/dev-accelerator/images/course-hero-grid.webp')] text-white p-8 relative overflow-hidden">
+    <div className="min-h-screen pt-20 bg-gray-800 bg-[url('https://www.jsmastery.pro/assets/dev-accelerator/images/course-hero-grid.webp')] text-white p-8 relative overflow-hidden">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12 fade-up">
