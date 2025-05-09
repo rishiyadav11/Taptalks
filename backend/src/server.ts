@@ -57,7 +57,7 @@ app.get("/seed", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Welcome to Taptalks backend");
+  res.send("Welcome to Chattrix backend");
 });
 // Start server
 server.listen(PORT, () => {

@@ -27,7 +27,7 @@ const ChatBox = ({ selectedChat, isGroup }: { selectedChat: any; isGroup: boolea
       } else {
         socket.emit("stop_typing", { toUserId: selectedChat._id });
       }
-    }, 1000);
+    }, 1000) as unknown as number; // Explicit cast here
     setTypingTimeout(timeout);
   };
 

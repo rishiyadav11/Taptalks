@@ -3,13 +3,14 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io, Socket } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+const BASE_URL =
+  import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
 
 interface AuthUser {
   _id?: string;
   email: string;
-  fullName:string;
-  createdAt?: string;  // Add this field
+  fullName: string;
+  createdAt?: string; // Add this field
   profilePic?: string; // Make sure to include this property
   // Add other fields as necessary
 }
@@ -36,10 +37,18 @@ interface AuthStore {
   socket: Socket | null;
 
   checkAuth: () => Promise<void>;
-  signup: (data: { fullName: string; email: string; password: string }) => Promise<void>;
+  signup: (data: {
+    fullName: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   login: (data: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { name?: string; email?: string; profilePic?: string }) => Promise<void>;
+  updateProfile: (data: {
+    name?: string;
+    email?: string;
+    profilePic?: string;
+  }) => Promise<void>;
   connectSocket: () => void;
   disconnectSocket: () => void;
 }
@@ -57,7 +66,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
       // Explicitly cast res.data as AuthUser
-      if (res.data && typeof res.data === "object" && (res.data as AuthUser)._id) {
+      if (
+        res.data &&
+        typeof res.data === "object" &&
+        (res.data as AuthUser)._id
+      ) {
         set({ authUser: res.data as AuthUser });
         get().connectSocket();
       } else {
@@ -70,13 +83,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       set({ isCheckingAuth: false });
     }
   },
-  
 
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
-
-      
       const res = await axiosInstance.post("/auth/signup", data);
       set({ authUser: res.data as AuthUser });
       toast.success("Account created successfully");

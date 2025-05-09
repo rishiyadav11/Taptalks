@@ -1,6 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type CallStatus = "initiated" | "ringing" | "accepted" | "rejected" | "ended";
+export type CallStatus =
+  | "initiated"
+  | "ringing"
+  | "accepted"
+  | "rejected"
+  | "ended";
 
 export interface ICall extends Document {
   caller: mongoose.Types.ObjectId;
@@ -13,8 +18,16 @@ export interface ICall extends Document {
 
 const callSchema = new Schema<ICall>(
   {
-    caller: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    receiver: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    caller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     status: {
       type: String,
       enum: ["initiated", "ringing", "accepted", "rejected", "ended"],

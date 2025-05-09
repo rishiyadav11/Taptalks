@@ -1,0 +1,34 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ./backend  # Path to your backend directory
+    ports:
+      - "5000:5000"  # Expose backend port
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/Chattrix  # Connect backend to mongo container
+      - JWT_SECRET=secretcode9211
+      - CLOUDINARY_CLOUD_NAME=dqcoonxqi
+      - CLOUDINARY_API_KEY=449455222644389
+      - CLOUDINARY_API_SECRET=FCkZ7BD7P0ONq2wN3knplLE9D1s
+    depends_on:
+      - mongo  # Backend depends on MongoDB
+
+  frontend:
+    build:
+      context: ./frontend  # Path to your frontend directory
+    ports:
+      - "80:80"  # Expose frontend port (Nginx default port)
+    depends_on:
+      - backend  # Ensure backend is up before frontend
+
+  mongo:
+    image: mongo:latest  # MongoDB container for your app
+    volumes:
+      - mongodb:/data/db  # Persist data
+    ports:
+      - "27017:27017"  # Expose MongoDB port
+
+volumes:
+  mongodb:
